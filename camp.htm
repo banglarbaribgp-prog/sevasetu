@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0B1120">
+  <title>Pension List</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-deep: #0B1120;
+      --bg-surface: #131C2E;
+      --bg-card: #1A253A;
+      --bg-input: #0F172A;
+      --primary: #3B82F6;
+      --primary-light: #60A5FA;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #22D3EE;
+      --success: #34D399;
+      --danger: #F87171;
+      --warn: #FBBF24;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --border-subtle: #2D3A52;
+      --shadow-card: 0 8px 20px rgba(0, 0, 0, 0.5);
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 10px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', system-ui, sans-serif;
+    }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      overflow: hidden;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+    .app {
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+      overflow: hidden; position: relative;
+      max-width: 520px; margin: 0 auto;
+      background: var(--bg-deep);
+      padding-top: var(--safe-top);
+    }
+
+    .main {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg-deep);
+      position: relative;
+      padding-bottom: 40px;
+    }
+
+    /* ============= SYNC STATUS BAR ============= */
+    .sync-bar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 11px; font-weight: 600; letter-spacing: 0.4px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      min-height: 40px;
+    }
+    .sync-bar .sync-status { display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+    .sync-bar .sync-status i { font-size: 10px; color: var(--success); transition: color 0.2s; }
+    .sync-bar .sync-status.stale i { color: var(--warn); }
+    .sync-bar .sync-status.old i { color: var(--danger); }
+    .sync-bar .sync-status.syncing i { color: var(--primary-light); animation: spin 0.9s linear infinite; }
+    .sync-bar .count-mini { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: -0.2px; text-transform: none; }
+
+    /* ============= SEARCH ============= */
+    .search-bar {
+      position: sticky; top: 40px; z-index: 15;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .search-bar .search-wrap {
+      flex: 1;
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 40px;
+      padding: 0 14px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .search-bar .search-wrap:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .search-bar i { color: var(--text-secondary); font-size: 13px; }
+    .search-bar input {
+      flex: 1; padding: 11px 0; border: none; background: transparent;
+      color: var(--text-primary); font-size: 14px; font-weight: 500;
+      outline: none; min-width: 0;
+    }
+    .search-bar input::placeholder { color: #475569; }
+    .search-bar .clear-btn { color: var(--text-secondary); font-size: 13px; padding: 4px; display: none; }
+    .search-bar .clear-btn.on { display: block; }
+
+    /* ============= TYPE GROUP HEADER ============= */
+    .date-group {
+      background: var(--bg-surface);
+      padding: 14px 18px 10px;
+      font-weight: 700;
+      color: var(--primary-light);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 92px;
+      z-index: 10;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      text-transform: uppercase;
+      font-size: 12px; letter-spacing: 0.8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .date-group .grp-count {
+      background: rgba(96,165,250,.15);
+      color: var(--primary-light);
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.2px;
+    }
+
+    /* ============= ENTRY ROW ============= */
+    .entry-row {
+      background: var(--bg-card);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin: 6px 12px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-subtle);
+      transition: background .12s, transform .1s;
+    }
+    .entry-row:active { transform: scale(0.985); background: #1E2B44; }
+
+    .entry-info { flex: 1; min-width: 0; }
+
+    .entry-info .name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .entry-info .meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .entry-info .meta i { font-size: 10px; color: var(--primary); }
+    .entry-info .meta .sep { color: var(--border-subtle); font-size: 12px; margin: 0 2px; }
+    .entry-info .aadhaar-val {
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      font-family: 'SF Mono', 'Consolas', monospace;
+    }
+    .entry-info .dob-val { color: #CBD5E1; font-weight: 500; }
+
+    .type-tag {
+      flex-shrink: 0;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ============= FAB SYNC ============= */
+    .fab-sync {
+      position: fixed;
+      bottom: calc(24px + var(--safe-bottom));
+      right: calc(20px + (100vw - min(520px, 100vw))/2);
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--bg-card);
+      color: var(--primary-light);
+      font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      border: 1px solid var(--border-subtle);
+      transition: transform 0.15s ease, background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .fab-sync:active { transform: scale(0.92); }
+    .fab-sync.spinning i { animation: spin 0.8s linear infinite; }
+    .fab-sync.ok { color: var(--success); border-color: var(--success); background: rgba(52, 211, 153, 0.12); }
+    .fab-sync.err { color: var(--danger); border-color: var(--danger); background: rgba(248, 113, 113, 0.12); }
+    .fab-sync:disabled { opacity: 0.7; pointer-events: none; }
+
+    /* ============= TOAST ============= */
+    .toast {
+      position: fixed;
+      bottom: calc(100px + var(--safe-bottom));
+      left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--bg-card); color: var(--text-primary);
+      padding: 14px 22px; border-radius: 40px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 300;
+      display: flex; align-items: center; gap: 8px;
+      max-width: calc(100vw - 40px);
+      border: 1px solid var(--border-subtle);
+    }
+    .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.err { background: #7F1D1D; border-color: #B91C1C; color: #FCA5A5; }
+    .toast.ok  { background: #064E3B; border-color: #047857; color: #6EE7B7; }
+
+    /* ============= STATE BLOCKS ============= */
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+    .empty i { font-size: 40px; display: block; margin-bottom: 16px; opacity: 0.4; color: var(--primary); }
+
+    .loading { text-align: center; padding: 60px 20px; }
+    .loading .spin-lg {
+      display: inline-block; width: 36px; height: 36px;
+      border: 3px solid var(--border-subtle); border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 0.65s linear infinite;
+    }
+    .loading p { margin-top: 14px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <main class="main" id="main">
+
+    <!-- SYNC BAR -->
+    <div class="sync-bar">
+      <div class="sync-status" id="syncStatus">
+        <i class="fas fa-circle"></i>
+        <span class="txt" id="syncText">Connecting…</span>
+      </div>
+      <div class="count-mini" id="countMini">0 records</div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-bar" id="searchBar" style="display:none;">
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search name, Aadhaar, or type…" autocomplete="off">
+        <button class="clear-btn" id="clearSearch" aria-label="Clear"><i class="fas fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="loading" id="loadingState">
+      <span class="spin-lg"></span>
+      <p>Loading pension records…</p>
+    </div>
+    <div id="entriesList"></div>
+
+  </main>
+
+  <button class="fab-sync" id="btnSync" aria-label="Sync now">
+    <i class="fas fa-rotate"></i>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============================================================
+     CONFIG
+     ============================================================ */
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykSfVYgIUv5KUAuYIZ_AMcRsVVWzqW-t1RNtq7LI2pk8QEneFw9oC9y2uhbcdoQgZ1/exec';
+  const CACHE_KEY  = 'pension_list_v1';
+  const CACHE_VER  = 1;
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  let ENTRIES        = [];      // full dataset
+  let FILTERED       = [];      // after search filter
+  let SYNCING        = false;
+  let LAST_SYNCED_AT = 0;
+  let statusTimer    = null;
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]
+  ));
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  function fmtAadhaar(a) {
+    if (!a) return '—';
+    const d = String(a).replace(/\D/g, '');
+    if (d.length === 12) return d.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3');
+    return d || a;
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return 'never';
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 5)  return 'just now';
+    if (s < 60) return s + ' sec ago';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + ' min ago';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + ' hr ago';
+    const d = Math.floor(h / 24);
+    return d + ' day' + (d > 1 ? 's' : '') + ' ago';
+  }
+
+  // Deterministic color from string (for TYPE tags)
+  function typeColor(t) {
+    const key = String(t || '').toLowerCase();
+    if (/old|বৃদ্ধ|বার্ধক্য/.test(key))       return 'linear-gradient(135deg,#8B5CF6,#6D28D9)';
+    if (/widow|বিধবা/.test(key))              return 'linear-gradient(135deg,#EC4899,#BE185D)';
+    if (/disab|প্রতিবন্ধী/.test(key))         return 'linear-gradient(135deg,#F59E0B,#D97706)';
+    if (/ladli|লক্ষ্মী|girl|মেয়ে/.test(key)) return 'linear-gradient(135deg,#10B981,#047857)';
+    if (/farmer|কৃষক/.test(key))              return 'linear-gradient(135deg,#22C55E,#15803D)';
+    if (/student|ছাত্র/.test(key))            return 'linear-gradient(135deg,#06B6D4,#0E7490)';
+    if (/artisan|কারিগর/.test(key))           return 'linear-gradient(135deg,#F43F5E,#9F1239)';
+    return 'linear-gradient(135deg,#3B82F6,#1D4ED8)';
+  }
+
+  /* ============================================================
+     SYNC STATUS BAR
+     ============================================================ */
+  function updateSyncStatus(state) {
+    const wrap = $('syncStatus');
+    const txt  = $('syncText');
+    const icon = wrap.querySelector('i');
+    wrap.classList.remove('syncing', 'stale', 'old');
+
+    if (state === 'syncing') {
+      wrap.classList.add('syncing');
+      txt.textContent = 'Syncing…';
+      icon.className = 'fas fa-rotate';
+      return;
+    }
+    if (state === 'error') {
+      wrap.classList.add('old');
+      txt.textContent = 'Sync failed — tap ↻';
+      icon.className = 'fas fa-circle-exclamation';
+      return;
+    }
+    icon.className = 'fas fa-circle';
+    if (!LAST_SYNCED_AT) { txt.textContent = 'Not synced yet'; return; }
+    const mins = (Date.now() - LAST_SYNCED_AT) / 60000;
+    if (mins > 60)      wrap.classList.add('old');
+    else if (mins > 10) wrap.classList.add('stale');
+    txt.textContent = 'Synced ' + timeAgo(LAST_SYNCED_AT);
+  }
+
+  function startStatusTicker() {
+    if (statusTimer) clearInterval(statusTimer);
+    statusTimer = setInterval(() => { if (!SYNCING) updateSyncStatus('idle'); }, 15000);
+  }
+
+  function setSyncBtn(state) {
+    const btn = $('btnSync');
+    if (!btn) return;
+    btn.classList.remove('spinning', 'ok', 'err');
+    if (state === 'spinning') { btn.classList.add('spinning'); btn.disabled = true; }
+    else if (state === 'ok')  { btn.classList.add('ok');  btn.disabled = false; setTimeout(() => btn.classList.remove('ok'), 1500); }
+    else if (state === 'err') { btn.classList.add('err'); btn.disabled = false; setTimeout(() => btn.classList.remove('err'), 2200); }
+    else                      { btn.disabled = false; }
+  }
+
+  /* ============================================================
+     LOCAL CACHE (persistent in browser)
+     ============================================================ */
+  function loadCache() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || obj.version !== CACHE_VER || !Array.isArray(obj.entries)) return null;
+      LAST_SYNCED_AT = obj.savedAt || 0;
+      return obj;
+    } catch (e) { return null; }
+  }
+
+  function saveCache() {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        version: CACHE_VER,
+        entries: ENTRIES,
+        savedAt: LAST_SYNCED_AT || Date.now()
+      }));
+    } catch (e) {
+      console.warn('Cache save failed (quota?):', e);
+      toast('Local storage full — records not saved', 'err');
+    }
+  }
+
+  /* ============================================================
+     JSONP
+     ============================================================ */
+  let jsonpCounter = 0;
+  function apiCall(action, params = {}, timeout = 120000) {
+    return new Promise(resolve => {
+      const cb = '__cb_' + (++jsonpCounter) + '_' + Date.now();
+      const sc = document.createElement('script');
+      const done = ok => {
+        delete window[cb];
+        if (sc.parentNode) sc.parentNode.removeChild(sc);
+        resolve(ok);
+      };
+      const t = setTimeout(() => done({ success: false, message: 'Timed out' }), timeout);
+      window[cb] = d => { clearTimeout(t); done(d); };
+      const q = new URLSearchParams({ action, callback: cb, ...params }).toString();
+      sc.src = `${SCRIPT_URL}?${q}`;
+      sc.onerror = () => { clearTimeout(t); done({ success: false, message: 'Network error' }); };
+      document.body.appendChild(sc);
+    });
+  }
+
+  /* ============================================================
+     SYNC — full bulk download
+     ============================================================ */
+  async function syncNow({ silent = false } = {}) {
+    if (SYNCING) return false;
+    SYNCING = true;
+    setSyncBtn('spinning');
+    updateSyncStatus('syncing');
+
+    let ok = false;
+    try {
+      const r = await apiCall('syncAll');
+      if (!r || !r.success || !r.data) {
+        setSyncBtn('err');
+        updateSyncStatus('error');
+        if (!silent) toast('Sync failed: ' + ((r && r.message) || 'unknown'), 'err');
+        return false;
+      }
+
+      ENTRIES = r.data.entries || [];
+      LAST_SYNCED_AT = Date.now();
+      saveCache();
+      applyFilter(true);
+      updateCountDisplay();
+
+      ok = true;
+      setSyncBtn('ok');
+      updateSyncStatus('idle');
+      if (!silent) toast('Synced ' + ENTRIES.length + ' records', 'ok');
+      return true;
+    } finally {
+      SYNCING = false;
+      if (!ok) setSyncBtn('err');
+    }
+  }
+
+  function updateCountDisplay() {
+    $('countMini').textContent = ENTRIES.length.toLocaleString('en-IN') + ' records';
+  }
+
+  /* ============================================================
+     SEARCH / FILTER
+     ============================================================ */
+  function applyFilter(_reset) {
+    const q       = ($('searchInput').value || '').trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, '');
+
+    if (!q) {
+      FILTERED = ENTRIES;
+    } else {
+      FILTERED = ENTRIES.filter(e => {
+        if (String(e.name).toLowerCase().includes(q))  return true;
+        if (String(e.type).toLowerCase().includes(q))  return true;
+        if (String(e.block).toLowerCase().includes(q)) return true;
+        if (String(e.gp).toLowerCase().includes(q))    return true;
+        if (qDigits && String(e.aadhaar).replace(/\D/g, '').includes(qDigits)) return true;
+        return false;
+      });
+    }
+    renderEntries();
+  }
+
+  /* ============================================================
+     RENDER — every row, grouped by TYPE
+     ============================================================ */
+  function renderEntries() {
+    const list      = $('entriesList');
+    const searchBar = $('searchBar');
+
+    searchBar.style.display = ENTRIES.length ? 'flex' : 'none';
+
+    if (!FILTERED.length) {
+      list.innerHTML = ENTRIES.length
+        ? '<div class="empty"><i class="fas fa-magnifying-glass"></i>No matches found.</div>'
+        : '<div class="empty"><i class="fas fa-inbox"></i>No pension records.</div>';
+      return;
+    }
+
+    // Group by TYPE
+    const groups = {};
+    FILTERED.forEach(e => {
+      const k = (e.type || 'OTHER').toUpperCase();
+      (groups[k] = groups[k] || []).push(e);
+    });
+    const types = Object.keys(groups).sort();
+
+    // Sort entries inside each group by name
+    types.forEach(t => {
+      groups[t].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    });
+
+    // Build HTML — every row, no pagination
+    let html = '';
+    for (const t of types) {
+      const items = groups[t];
+      html += `<div class="date-group">
+        <span>${esc(t)}</span>
+        <span class="grp-count">${items.length}</span>
+      </div>`;
+
+      for (const e of items) {
+        html += `
+          <div class="entry-row" data-slno="${esc(e.slNo)}">
+            <div class="entry-info">
+              <div class="name">${esc(e.name)}</div>
+              <div class="meta">
+                <i class="fas fa-id-card"></i>
+                <span class="aadhaar-val">${esc(fmtAadhaar(e.aadhaar))}</span>
+                <span class="sep">·</span>
+                <i class="fas fa-cake-candles"></i>
+                <span class="dob-val">${esc(e.dob || '—')}</span>
+              </div>
+            </div>
+            <div class="type-tag" style="background:${typeColor(t)}">${esc(t)}</div>
+          </div>`;
+      }
+    }
+
+    list.innerHTML = html;
+  }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  let toastTimer = null;
+  function toast(m, kind = '') {
+    const t = $('toast');
+    const ico = kind === 'ok' ? 'fa-circle-check'
+              : kind === 'err' ? 'fa-circle-exclamation'
+              : 'fa-circle-info';
+    t.className = 'toast ' + kind;
+    t.innerHTML = `<i class="fas ${ico}"></i> <span>${esc(m)}</span>`;
+    t.classList.add('on');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+  }
+
+  /* ============================================================
+     SEARCH INPUT WIRING
+     ============================================================ */
+  let searchDebounce = null;
+  $('searchInput').addEventListener('input', () => {
+    $('clearSearch').classList.toggle('on', !!$('searchInput').value);
+    if (searchDebounce) clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => applyFilter(false), 150);
+  });
+  $('clearSearch').addEventListener('click', () => {
+    $('searchInput').value = '';
+    $('clearSearch').classList.remove('on');
+    applyFilter(false);
+  });
+
+  /* ============================================================
+     BOOT — cache-first, no automatic server hit on reload
+     ============================================================ */
+  function boot() {
+    const cached = loadCache();
+
+    if (cached) {
+      // Use cached data immediately — NO server call
+      ENTRIES = cached.entries;
+      $('loadingState').style.display = 'none';
+      applyFilter(true);
+      updateCountDisplay();
+      updateSyncStatus('idle');
+      console.log('[Pension] Loaded ' + ENTRIES.length + ' records from cache.');
+    } else {
+      // First visit (or cache cleared) — fetch once
+      updateSyncStatus('syncing');
+      syncNow({ silent: false }).then(ok => {
+        $('loadingState').style.display = 'none';
+        if (!ok) {
+          $('entriesList').innerHTML =
+            '<div class="empty"><i class="fas fa-triangle-exclamation"></i>Failed to load.<br><small>Check connection &amp; Web App URL.</small></div>';
+        }
+      });
+    }
+
+    startStatusTicker();
+
+    // Manual sync
+    $('btnSync').addEventListener('click', () => {
+      toast('Refreshing…');
+      syncNow({ silent: false });
+    });
+
+    // Pull-to-refresh
+    let touchStartY = 0;
+    const main = $('main');
+    main.addEventListener('touchstart', e => {
+      touchStartY = main.scrollTop <= 0 ? e.touches[0].clientY : 0;
+    }, { passive: true });
+    main.addEventListener('touchend', e => {
+      if (!touchStartY) return;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (dy > 90) {
+        toast('Refreshing…');
+        syncNow({ silent: false });
+      }
+      touchStartY = 0;
+    });
+  }
+
+  boot();
+</script>
+</body>
+</html>
