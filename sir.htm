@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0B1120">
+  <title>SIR DATA — All Records</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root{
+      --bg-deep:#0B1120; --bg-surface:#131C2E; --bg-card:#1A253A; --bg-input:#0F172A;
+      --primary:#3B82F6; --primary-light:#60A5FA; --primary-glow:rgba(59,130,246,.25);
+      --accent:#22D3EE; --success:#34D399; --danger:#F87171; --warn:#FBBF24;
+      --text-primary:#F1F5F9; --text-secondary:#94A3B8; --border-subtle:#2D3A52;
+      --shadow-card:0 8px 20px rgba(0,0,0,.5);
+      --radius-md:12px;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter','Roboto',system-ui,sans-serif;}
+    html,body{height:100%;}
+    body{background:var(--bg-deep);color:var(--text-primary);overflow:hidden;font-size:14px;-webkit-font-smoothing:antialiased;}
+    button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+    .app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;
+         max-width:520px;margin:0 auto;background:var(--bg-deep);padding-top:var(--safe-top);}
+
+    /* TOP BAR */
+    .topbar{display:flex;align-items:center;gap:12px;padding:14px 18px 12px;
+            background:var(--bg-deep);border-bottom:1px solid var(--border-subtle);}
+    .topbar .logo{width:42px;height:42px;border-radius:13px;flex-shrink:0;
+                  background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+                  display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;
+                  box-shadow:0 6px 16px rgba(59,130,246,.35);}
+    .topbar .titles{min-width:0;flex:1;}
+    .topbar h1{font-size:15px;font-weight:800;letter-spacing:.4px;}
+    .topbar .sub{font-size:11px;font-weight:600;color:var(--text-secondary);
+                 margin-top:3px;display:flex;align-items:center;gap:6px;
+                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .topbar .sub i{font-size:8px;color:var(--success);}
+    .topbar .sub.syncing i{color:var(--primary-light);animation:spin .9s linear infinite;}
+    .topbar .sub.stale i{color:var(--warn);}
+    .topbar .sub.old i{color:var(--danger);}
+    .count-mini{margin-left:auto;flex-shrink:0;color:var(--accent);font-size:11px;font-weight:800;
+                background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);
+                padding:5px 10px;border-radius:20px;letter-spacing:.2px;}
+
+    /* SEARCH */
+    .search-bar{padding:12px 14px;background:var(--bg-deep);border-bottom:1px solid var(--border-subtle);}
+    .search-wrap{display:flex;align-items:center;gap:10px;background:var(--bg-input);
+                 border:1px solid var(--border-subtle);border-radius:40px;padding:0 14px;
+                 transition:border-color .15s,box-shadow .15s;}
+    .search-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+    .search-wrap > i{color:var(--text-secondary);font-size:14px;}
+    #epicInput{flex:1;min-width:0;padding:13px 0;border:none;background:transparent;
+               color:var(--text-primary);font-size:15px;font-weight:700;letter-spacing:1.2px;
+               text-transform:uppercase;outline:none;font-family:'SF Mono','Consolas',monospace;}
+    #epicInput::placeholder{letter-spacing:0;text-transform:none;font-weight:500;
+                            color:#475569;font-family:inherit;font-size:13.5px;}
+    .clear-btn{color:var(--text-secondary);font-size:14px;padding:6px;display:none;}
+    .clear-btn.on{display:block;}
+
+    /* MAIN */
+    .main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+          padding-bottom:calc(96px + var(--safe-bottom));}
+
+    .result-head{padding:14px 20px 2px;font-size:11px;font-weight:800;letter-spacing:.9px;
+                 text-transform:uppercase;color:var(--text-secondary);}
+
+    /* VOTER CARD */
+    .voter-card{background:var(--bg-card);margin:10px 12px;border-radius:var(--radius-md);
+                border:1px solid var(--border-subtle);box-shadow:var(--shadow-card);
+                overflow:hidden;animation:pop .18s ease;}
+    @keyframes pop{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+    .vc-head{display:flex;align-items:center;gap:11px;padding:13px 14px;
+             background:linear-gradient(135deg,rgba(59,130,246,.20),rgba(34,211,238,.06));
+             border-bottom:1px solid var(--border-subtle);}
+    .vc-avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;
+               background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+               display:flex;align-items:center;justify-content:center;
+               font-weight:800;font-size:16px;color:#fff;
+               box-shadow:0 4px 12px rgba(59,130,246,.35);}
+    .vc-head .info{min-width:0;flex:1;}
+    .vc-name{font-size:15px;font-weight:700;line-height:1.25;
+             color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .vc-epic-mini{font-size:11.5px;margin-top:3px;font-family:'SF Mono','Consolas',monospace;
+                  letter-spacing:.8px;color:var(--accent);font-weight:600;}
+    .vc-copy{width:36px;height:36px;flex-shrink:0;border-radius:11px;
+             background:rgba(255,255,255,.05);border:1px solid var(--border-subtle);
+             color:var(--text-secondary);font-size:13px;
+             display:flex;align-items:center;justify-content:center;
+             transition:transform .12s,color .2s,border-color .2s;}
+    .vc-copy:active{transform:scale(.9);}
+    .vc-copy.ok{color:var(--success);border-color:var(--success);}
+
+    .vc-rows{padding:4px 15px 10px;}
+    .vc-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+            padding:10px 0;border-bottom:1px dashed rgba(45,58,82,.75);}
+    .vc-row:last-child{border-bottom:none;}
+    .vc-row .lbl{font-size:10.5px;font-weight:700;letter-spacing:.7px;
+                 text-transform:uppercase;color:var(--text-secondary);flex-shrink:0;
+                 padding-top:2px;}
+    .vc-row .val{font-size:13.5px;font-weight:600;color:var(--text-primary);
+                 text-align:right;word-break:break-word;flex:1;}
+    .vc-row .val.mono{font-family:'SF Mono','Consolas',monospace;
+                      color:var(--accent);letter-spacing:.5px;}
+
+    /* GENDER pill */
+    .gender-pill{
+      display:inline-block; padding:3px 10px; border-radius:20px;
+      font-size:10.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase;
+    }
+    .gender-m{background:rgba(59,130,246,.18); color:#93C5FD; border:1px solid rgba(59,130,246,.35);}
+    .gender-f{background:rgba(236,72,153,.18); color:#F9A8D4; border:1px solid rgba(236,72,153,.35);}
+    .gender-o{background:rgba(148,163,184,.15); color:#CBD5E1; border:1px solid rgba(148,163,184,.3);}
+
+    mark{background:rgba(34,211,238,.28);color:var(--accent);border-radius:3px;padding:0 1px;}
+
+    /* STATES */
+    .state{text-align:center;padding:70px 26px;color:var(--text-secondary);}
+    .state > i{font-size:40px;display:block;margin-bottom:18px;color:var(--primary);opacity:.45;}
+    .state .spin-lg{display:inline-block;width:34px;height:34px;margin-bottom:18px;
+                    border:3px solid var(--border-subtle);border-top-color:var(--primary);
+                    border-radius:50%;animation:spin .65s linear infinite;}
+    .state p{font-size:14px;font-weight:600;color:var(--text-primary);}
+    .state small{display:block;margin-top:7px;font-size:12px;
+                 color:var(--text-secondary);letter-spacing:1.2px;
+                 font-family:'SF Mono','Consolas',monospace;}
+
+    /* FAB */
+    .fab-sync{position:fixed;bottom:calc(24px + var(--safe-bottom));
+              right:calc(20px + (100vw - min(520px,100vw))/2);
+              width:56px;height:56px;border-radius:50%;
+              background:var(--bg-card);color:var(--primary-light);
+              font-size:20px;display:flex;align-items:center;justify-content:center;
+              box-shadow:0 8px 24px rgba(0,0,0,.6);
+              border:1px solid var(--border-subtle);z-index:100;
+              transition:transform .15s ease,background .2s,color .2s,border-color .2s;}
+    .fab-sync:active{transform:scale(.92);}
+    .fab-sync.spinning i{animation:spin .8s linear infinite;}
+    .fab-sync.ok{color:var(--success);border-color:var(--success);background:rgba(52,211,153,.12);}
+    .fab-sync.err{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.12);}
+    .fab-sync:disabled{opacity:.7;pointer-events:none;}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:calc(100px + var(--safe-bottom));
+           left:50%;transform:translateX(-50%) translateY(80px);
+           background:var(--bg-card);color:var(--text-primary);
+           padding:13px 22px;border-radius:40px;font-size:13px;font-weight:600;
+           box-shadow:0 12px 28px rgba(0,0,0,.6);opacity:0;pointer-events:none;
+           transition:opacity .25s,transform .25s;z-index:300;
+           display:flex;align-items:center;gap:9px;max-width:calc(100vw - 40px);
+           border:1px solid var(--border-subtle);}
+    .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+    .toast.err{background:#7F1D1D;border-color:#B91C1C;color:#FCA5A5;}
+    .toast.ok{background:#064E3B;border-color:#047857;color:#6EE7B7;}
+
+    @keyframes spin{to{transform:rotate(360deg);}}
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--border-subtle);border-radius:4px;}
+    ::-webkit-scrollbar-thumb:hover{background:var(--primary);}
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo"><i class="fas fa-id-card-clip"></i></div>
+    <div class="titles">
+      <h1>SIR DATA</h1>
+      <div class="sub" id="syncText"><i class="fas fa-circle"></i> Connecting…</div>
+    </div>
+    <div class="count-mini" id="countMini">0</div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <i class="fas fa-magnifying-glass"></i>
+      <input type="text" id="epicInput" placeholder="Filter by EPIC Number…"
+             autocapitalize="characters" autocomplete="off"
+             autocorrect="off" spellcheck="false" inputmode="text">
+      <button class="clear-btn" id="clearSearch" aria-label="Clear">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <main class="main" id="main">
+    <div id="results"></div>
+  </main>
+
+  <button class="fab-sync" id="btnSync" aria-label="Sync now">
+    <i class="fas fa-rotate"></i>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============================================================
+     CONFIG
+     ============================================================ */
+  const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzKE-fYBTYYw2Gc8GaUe4GKdZK0ID3ehXSMV-1rWTRuOvL9YyIj5bwf3LoWHeuvn7k4/exec';
+  const CACHE_KEY   = 'sir_data_all_v2';   // bumped version for new schema
+  const CACHE_VER   = 2;
+  const REFRESH_MS  = 10 * 60 * 1000;
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  let ENTRIES        = [];
+  let FILTERED       = [];
+  let DATA_READY     = false;
+  let SYNCING        = false;
+  let LAST_SYNCED_AT = 0;
+  let statusTimer    = null;
+  let filterTimer    = null;
+
+  const $   = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]
+  ));
+  const normalizeEpic = v => String(v == null ? '' : v).toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  /* ============================================================
+     TIME HELPERS
+     ============================================================ */
+  function timeAgo(ts) {
+    if (!ts) return 'never';
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 5)  return 'just now';
+    if (s < 60) return s + ' sec ago';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + ' min ago';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + ' hr ago';
+    const d = Math.floor(h / 24);
+    return d + ' day' + (d > 1 ? 's' : '') + ' ago';
+  }
+
+  /* ============================================================
+     SYNC STATUS
+     ============================================================ */
+  function setStatus(state) {
+    const el = $('syncText');
+    el.classList.remove('syncing', 'stale', 'old');
+
+    if (state === 'syncing') {
+      el.classList.add('syncing');
+      el.innerHTML = '<i class="fas fa-rotate"></i> Syncing…';
+      return;
+    }
+    if (state === 'error') {
+      el.classList.add('old');
+      el.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Sync failed — tap ↻';
+      return;
+    }
+    if (!LAST_SYNCED_AT) {
+      el.innerHTML = '<i class="fas fa-circle"></i> Not synced yet';
+      return;
+    }
+    const mins = (Date.now() - LAST_SYNCED_AT) / 60000;
+    if (mins > 60)      el.classList.add('old');
+    else if (mins > 10) el.classList.add('stale');
+    el.innerHTML = '<i class="fas fa-circle"></i> Synced ' + timeAgo(LAST_SYNCED_AT);
+  }
+
+  function startStatusTicker() {
+    if (statusTimer) clearInterval(statusTimer);
+    statusTimer = setInterval(() => { if (!SYNCING) setStatus('idle'); }, 15000);
+  }
+
+  function setSyncBtn(state) {
+    const btn = $('btnSync');
+    btn.classList.remove('spinning', 'ok', 'err');
+    if (state === 'spinning') {
+      btn.classList.add('spinning'); btn.disabled = true;
+    } else if (state === 'ok') {
+      btn.disabled = false; btn.classList.add('ok');
+      setTimeout(() => btn.classList.remove('ok'), 1500);
+    } else if (state === 'err') {
+      btn.disabled = false; btn.classList.add('err');
+      setTimeout(() => btn.classList.remove('err'), 2200);
+    } else {
+      btn.disabled = false;
+    }
+  }
+
+  function updateCount() {
+    $('countMini').textContent = ENTRIES.length.toLocaleString('en-IN');
+  }
+
+  /* ============================================================
+     CACHE
+     ============================================================ */
+  function loadCache() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || obj.version !== CACHE_VER || !Array.isArray(obj.entries)) return null;
+      LAST_SYNCED_AT = obj.savedAt || 0;
+      return obj;
+    } catch (e) { return null; }
+  }
+
+  function saveCache() {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        version: CACHE_VER,
+        entries: ENTRIES,
+        savedAt: LAST_SYNCED_AT || Date.now()
+      }));
+    } catch (e) {
+      console.warn('Cache save failed:', e);
+      toast('Local storage full — records not saved', 'err');
+    }
+  }
+
+  /* ============================================================
+     JSONP API
+     ============================================================ */
+  let jsonpCounter = 0;
+  function apiCall(action, params = {}, timeout = 120000) {
+    return new Promise(resolve => {
+      const cb = '__cb_' + (++jsonpCounter) + '_' + Date.now();
+      const sc = document.createElement('script');
+      const done = ok => {
+        delete window[cb];
+        if (sc.parentNode) sc.parentNode.removeChild(sc);
+        resolve(ok);
+      };
+      const t = setTimeout(() => done({ success: false, message: 'Timed out' }), timeout);
+      window[cb] = d => { clearTimeout(t); done(d); };
+      const q = new URLSearchParams({ action, callback: cb, ...params }).toString();
+      sc.src = SCRIPT_URL + '?' + q;
+      sc.onerror = () => { clearTimeout(t); done({ success: false, message: 'Network error' }); };
+      document.body.appendChild(sc);
+    });
+  }
+
+  /* ============================================================
+     SYNC ALL
+     ============================================================ */
+  async function syncNow({ silent = false } = {}) {
+    if (SYNCING) return false;
+    SYNCING = true;
+    setSyncBtn('spinning');
+    setStatus('syncing');
+
+    let ok = false;
+    try {
+      const r = await apiCall('syncAll');
+      if (!r || !r.success || !r.data) {
+        setSyncBtn('err');
+        setStatus('error');
+        if (!silent) toast('Sync failed: ' + ((r && r.message) || 'unknown'), 'err');
+        return false;
+      }
+      ENTRIES        = r.data.entries || [];
+      DATA_READY     = true;
+      LAST_SYNCED_AT = Date.now();
+      saveCache();
+      updateCount();
+      applyFilter();
+      setSyncBtn('ok');
+      setStatus('idle');
+      ok = true;
+      if (!silent) toast('Synced ' + ENTRIES.length + ' records', 'ok');
+      return true;
+    } finally {
+      SYNCING = false;
+      if (!ok && !silent) setSyncBtn('err');
+    }
+  }
+
+  /* ============================================================
+     FILTER & RENDER
+     ============================================================ */
+  function applyFilter() {
+    const q = normalizeEpic($('epicInput').value);
+
+    if (!q) {
+      FILTERED = ENTRIES.slice();
+    } else {
+      FILTERED = ENTRIES.filter(e => String(e.epic || '').indexOf(q) !== -1);
+    }
+    renderList();
+  }
+
+  function highlightEpic(epic, q) {
+    const s = String(epic || '');
+    if (!q) return esc(s);
+    const idx = s.indexOf(q);
+    if (idx === -1) return esc(s);
+    return esc(s.slice(0, idx)) +
+           '<mark>' + esc(s.slice(idx, idx + q.length)) + '</mark>' +
+           esc(s.slice(idx + q.length));
+  }
+
+  function genderClass(g) {
+    const v = String(g || '').trim().toUpperCase();
+    if (v.startsWith('M')) return 'gender-m';
+    if (v.startsWith('F')) return 'gender-f';
+    return 'gender-o';
+  }
+
+  function cardHTML(e, q) {
+    const initial = String(e.name || '?').trim().charAt(0).toUpperCase() || '?';
+
+    let rowsHTML = '';
+
+    // Gender pill
+    if (e.gender) {
+      rowsHTML += '<div class="vc-row"><span class="lbl">Gender</span>' +
+                  '<span class="val"><span class="gender-pill ' + genderClass(e.gender) + '">' +
+                  esc(e.gender) + '</span></span></div>';
+    }
+
+    // Father / Husband with relation label
+    if (e.father) {
+      const lbl = e.relation ? esc(e.relation) : 'Father / Husband';
+      rowsHTML += '<div class="vc-row"><span class="lbl">' + lbl + '</span>' +
+                  '<span class="val">' + esc(e.father) + '</span></div>';
+    } else if (e.relation) {
+      rowsHTML += '<div class="vc-row"><span class="lbl">Relation</span>' +
+                  '<span class="val">' + esc(e.relation) + '</span></div>';
+    }
+
+    // GP
+    if (e.gp) {
+      rowsHTML += '<div class="vc-row"><span class="lbl">GP</span>' +
+                  '<span class="val">' + esc(e.gp) + '</span></div>';
+    }
+
+    // Part No.
+    if (e.part) {
+      rowsHTML += '<div class="vc-row"><span class="lbl">Part No.</span>' +
+                  '<span class="val mono">' + esc(e.part) + '</span></div>';
+    }
+
+    // Sl No.
+    if (e.sl) {
+      rowsHTML += '<div class="vc-row"><span class="lbl">Sl No.</span>' +
+                  '<span class="val mono">' + esc(e.sl) + '</span></div>';
+    }
+
+    return '' +
+      '<div class="voter-card">' +
+        '<div class="vc-head">' +
+          '<div class="vc-avatar">' + esc(initial) + '</div>' +
+          '<div class="info">' +
+            '<div class="vc-name">' + esc(e.name || '—') + '</div>' +
+            '<div class="vc-epic-mini">' + highlightEpic(e.epic, q) + '</div>' +
+          '</div>' +
+          '<button class="vc-copy" data-copy="' + esc(e.epic) + '" aria-label="Copy EPIC">' +
+            '<i class="fas fa-copy"></i></button>' +
+        '</div>' +
+        '<div class="vc-rows">' + rowsHTML + '</div>' +
+      '</div>';
+  }
+
+  function renderList() {
+    const list = $('results');
+    const q    = normalizeEpic($('epicInput').value);
+
+    if (!DATA_READY) {
+      list.innerHTML = '<div class="state"><span class="spin-lg"></span><p>Loading all records…</p></div>';
+      return;
+    }
+
+    if (!ENTRIES.length) {
+      list.innerHTML = '<div class="state"><i class="fas fa-inbox"></i><p>No records found in sheet.</p></div>';
+      return;
+    }
+
+    if (!FILTERED.length) {
+      list.innerHTML = '<div class="state"><i class="fas fa-user-slash"></i>' +
+                       '<p>No match for</p><small>' + esc(q) + '</small></div>';
+      return;
+    }
+
+    FILTERED.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+
+    let html = '<div class="result-head">' +
+               (q ? FILTERED.length + ' of ' + ENTRIES.length + ' records' :
+                    'All ' + ENTRIES.length + ' records') +
+               '</div>';
+    for (const e of FILTERED) html += cardHTML(e, q);
+    list.innerHTML = html;
+  }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  let toastTimer = null;
+  function toast(m, kind = '') {
+    const t = $('toast');
+    const ico = kind === 'ok' ? 'fa-circle-check'
+              : kind === 'err' ? 'fa-circle-exclamation'
+              : 'fa-circle-info';
+    t.className = 'toast ' + kind;
+    t.innerHTML = '<i class="fas ' + ico + '"></i><span>' + esc(m) + '</span>';
+    t.classList.add('on');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+  }
+
+  /* ============================================================
+     WIRING
+     ============================================================ */
+  function wireEvents() {
+    const inp = $('epicInput');
+
+    inp.addEventListener('input', () => {
+      const clean = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+      if (clean !== inp.value) inp.value = clean;
+      $('clearSearch').classList.toggle('on', !!inp.value);
+
+      if (filterTimer) clearTimeout(filterTimer);
+      filterTimer = setTimeout(applyFilter, 120);
+    });
+
+    $('clearSearch').addEventListener('click', () => {
+      inp.value = '';
+      $('clearSearch').classList.remove('on');
+      inp.focus();
+      applyFilter();
+    });
+
+    // copy EPIC
+    $('results').addEventListener('click', async ev => {
+      const btn = ev.target.closest('.vc-copy');
+      if (!btn) return;
+      const val = btn.getAttribute('data-copy') || '';
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(val);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = val; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        btn.classList.add('ok');
+        setTimeout(() => btn.classList.remove('ok'), 1200);
+        toast('EPIC copied: ' + val, 'ok');
+      } catch (e) {
+        toast('Copy failed', 'err');
+      }
+    });
+
+    // manual sync
+    $('btnSync').addEventListener('click', () => {
+      toast('Refreshing…');
+      syncNow({ silent: false });
+    });
+
+    // pull-to-refresh
+    let touchStartY = 0;
+    const main = $('main');
+    main.addEventListener('touchstart', e => {
+      touchStartY = main.scrollTop <= 0 ? e.touches[0].clientY : 0;
+    }, { passive: true });
+    main.addEventListener('touchend', e => {
+      if (!touchStartY) return;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (dy > 90) { toast('Refreshing…'); syncNow({ silent: false }); }
+      touchStartY = 0;
+    });
+  }
+
+  /* ============================================================
+     BOOT
+     ============================================================ */
+  function boot() {
+    wireEvents();
+    renderList();
+
+    const cached = loadCache();
+
+    if (cached) {
+      ENTRIES    = cached.entries;
+      DATA_READY = true;
+      updateCount();
+      applyFilter();
+      setStatus('idle');
+
+      const age = Date.now() - (cached.savedAt || 0);
+      if (age > REFRESH_MS) syncNow({ silent: true });
+    } else {
+      setStatus('syncing');
+      syncNow({ silent: true }).then(ok => {
+        if (!ok) setStatus('error');
+      });
+    }
+
+    startStatusTicker();
+  }
+
+  boot();
+</script>
+</body>
+</html>
