@@ -82,6 +82,53 @@
     .sync-bar .sync-status.syncing i { color: var(--primary-light); animation: spin 0.9s linear infinite; }
     .sync-bar .count-mini { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: -0.2px; text-transform: none; }
 
+    /* ============= USER STRIP ============= */
+    .user-strip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      background: linear-gradient(180deg, rgba(59,130,246,.08), rgba(59,130,246,0));
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+    }
+    .user-strip .u-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #1D4ED8);
+      color: #fff; font-weight: 800; font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+    .user-strip .u-info { flex: 1; min-width: 0; }
+    .user-strip .u-name {
+      font-weight: 700; color: var(--text-primary); font-size: 13px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-strip .u-meta {
+      font-size: 10.5px; color: var(--text-secondary); font-weight: 500;
+      margin-top: 1px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .user-strip .u-meta .dot { color: var(--border-subtle); }
+    .user-strip .u-mob {
+      font-family: 'SF Mono', 'Consolas', monospace;
+      color: var(--accent); letter-spacing: 0.3px;
+    }
+    .user-strip .u-perm {
+      font-size: 9px; font-weight: 800; letter-spacing: .4px;
+      padding: 2px 7px; border-radius: 20px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .user-strip .u-perm.ALLOWED { background: rgba(16,185,129,.15); color: #6EE7B7; border-color: rgba(16,185,129,.35); }
+    .user-strip .u-perm.DENIED  { background: rgba(239,68,68,.15); color: #FCA5A5; border-color: rgba(239,68,68,.35); }
+    .user-strip .u-level {
+      font-size: 9px; font-weight: 800; letter-spacing: .4px;
+      padding: 2px 7px; border-radius: 20px;
+      background: rgba(59,130,246,.15); color: var(--primary-light);
+      border: 1px solid rgba(59,130,246,.3);
+      text-transform: uppercase;
+    }
+
     /* ============= SEARCH ============= */
     .search-bar {
       position: sticky; top: 40px; z-index: 15;
@@ -183,7 +230,6 @@
     }
     .entry-info .dob-val { color: #CBD5E1; font-weight: 500; }
 
-    /* Age badge (replaces JKS "not updated" chip) */
     .age-badge {
       display: inline-flex;
       align-items: center;
@@ -207,7 +253,6 @@
       font-weight: 500;
     }
 
-    /* JKS chips */
     .jks-info {
       margin-top: 8px;
       display: flex;
@@ -233,6 +278,11 @@
       text-overflow: ellipsis;
     }
     .jks-chip i { font-size: 9px; opacity: 0.8; }
+    .jks-chip.user-chip {
+      background: rgba(52, 211, 153, 0.1);
+      border-color: rgba(52, 211, 153, 0.25);
+      color: var(--success);
+    }
 
     .entry-right {
       display: flex;
@@ -381,6 +431,15 @@
       padding-left: 44px;
     }
     .modal-box .sub strong { color: var(--accent); font-weight: 600; }
+    .modal-box .sub .by {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      color: var(--success);
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 10.5px; font-weight: 700;
+      margin-top: 4px;
+    }
 
     .modal-box .field { margin-bottom: 14px; }
     .modal-box .field label {
@@ -451,6 +510,20 @@
       <div class="count-mini" id="countMini">0 records</div>
     </div>
 
+    <!-- USER STRIP (silent — reads session from index) -->
+    <div class="user-strip" id="userStrip" style="display:none;">
+      <div class="u-avatar" id="uAvatar">?</div>
+      <div class="u-info">
+        <div class="u-name" id="uName">—</div>
+        <div class="u-meta">
+          <span class="u-mob" id="uMob">—</span>
+          <span class="dot">·</span>
+          <span class="u-level" id="uLevel">—</span>
+          <span class="u-perm" id="uPerm">—</span>
+        </div>
+      </div>
+    </div>
+
     <!-- SEARCH -->
     <div class="search-bar" id="searchBar" style="display:none;">
       <div class="search-wrap">
@@ -506,7 +579,7 @@
   /* ============================================================
      CONFIG
      ============================================================ */
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzRe8ApQSii4Rre6r5nMAGvXQ2P7BmaezxbPXAHH1-T-E0MM1ZEW1RE0pxAxgEoSjG2w/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzHv79_zSb26pcW_UMsnCbSGtSe-FKp3_I7dtUSiuJNVBs07ysUuh_e6a1LFmYKJ1wMEg/exec';
   const CACHE_KEY  = 'pension_list_v2';
   const CACHE_VER  = 2;
 
@@ -521,6 +594,9 @@
 
   let editingRow    = null;
   let editingIndex  = -1;
+
+  // ---- Signed-in user, read silently from index page session ----
+  let CURRENT_USER = null;
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => (
@@ -562,62 +638,138 @@
     return 'linear-gradient(135deg,#3B82F6,#1D4ED8)';
   }
 
-  // ---- Compute age in years from DOB string (DD/MM/YYYY) ----
   function calcAge(dobStr) {
     if (!dobStr) return null;
     const s = String(dobStr).trim();
 
-    // Try DD/MM/YYYY or DD-MM-YYYY
     let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
     let dob = null;
     if (m) {
-      const dd = parseInt(m[1], 10);
-      const mm = parseInt(m[2], 10) - 1;
-      const yyyy = parseInt(m[3], 10);
-      dob = new Date(yyyy, mm, dd);
+      dob = new Date(+m[3], +m[2] - 1, +m[1]);
     } else {
-      // Try YYYY-MM-DD
       m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-      if (m) {
-        const yyyy = parseInt(m[1], 10);
-        const mm = parseInt(m[2], 10) - 1;
-        const dd = parseInt(m[3], 10);
-        dob = new Date(yyyy, mm, dd);
-      }
+      if (m) dob = new Date(+m[1], +m[2] - 1, +m[3]);
     }
-
     if (!dob || isNaN(dob.getTime())) return null;
 
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     const mDiff = today.getMonth() - dob.getMonth();
-    if (mDiff < 0 || (mDiff === 0 && today.getDate() < dob.getDate())) {
-      age--;
-    }
-    if (age < 0 || age > 150) return null; // sanity check
+    if (mDiff < 0 || (mDiff === 0 && today.getDate() < dob.getDate())) age--;
+    if (age < 0 || age > 150) return null;
     return age;
   }
 
-  // Convert DD/MM/YYYY → YYYY-MM-DD for <input type="date">
   function toISO(ddmmyyyy) {
     if (!ddmmyyyy) return '';
     const m = String(ddmmyyyy).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
     if (!m) return '';
-    const dd = String(m[1]).padStart(2, '0');
-    const mm = String(m[2]).padStart(2, '0');
-    const yyyy = m[3];
-    return `${yyyy}-${mm}-${dd}`;
+    return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
   }
 
-  // Convert YYYY-MM-DD → DD/MM/YYYY
   function fromISO(iso) {
     if (!iso) return '';
     const m = String(iso).match(/^(\d{4})\-(\d{1,2})\-(\d{1,2})/);
     if (!m) return iso;
-    const yyyy = m[1];
-    const mm = String(m[2]).padStart(2, '0');
-    const dd = String(m[3]).padStart(2, '0');
-    return `${dd}/${mm}/${yyyy}`;
+    return `${String(m[3]).padStart(2, '0')}/${String(m[2]).padStart(2, '0')}/${m[1]}`;
+  }
+
+  function initials(name) {
+    if (!name) return '?';
+    return name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  /* ============================================================
+     READ SESSION FROM INDEX PAGE
+     - The index.html stores the signed-in user.
+     - We read it silently — no sign-in UI here.
+     - Tries many common keys so it works with any index page.
+     ============================================================ */
+  const SESSION_KEYS = [
+    'uc_sess','seva_sess','session','user','currentUser',
+    'seva_user','user_data','logged_user','auth','USER','userData',
+    'pension_user','pension_user_name','loggedInUser','current_user'
+  ];
+
+  function safeParse(raw){
+    try { return JSON.parse(raw); }
+    catch(e){
+      if (typeof raw === 'string' && raw.includes('|')){
+        const p = raw.split('|');
+        return { mobile: p[0], name: p[1], role: p[2], permission: p[3] };
+      }
+      return null;
+    }
+  }
+
+  function normalizeUser(u){
+    if (!u || typeof u !== 'object') return null;
+    const mobile = u.mobile || u.username || u.phone || u.mob || '';
+    const name   = u.name   || u.fullName || u.userName || u.user || '';
+    const role   = u.role   || u.level    || u.type || 'DEO';
+    const perm   = u.permission || u.perm || u.status || 'ALLOWED';
+    if (!mobile && !name) return null;
+    return {
+      mobile    : String(mobile).trim(),
+      name      : String(name).trim() || 'User',
+      role      : String(role).trim().toUpperCase(),
+      permission: String(perm).trim().toUpperCase()
+    };
+  }
+
+  function readSessionFromIndex(){
+    // 1. localStorage
+    for (const k of SESSION_KEYS){
+      try {
+        const raw = localStorage.getItem(k);
+        if (raw){
+          const u = normalizeUser(safeParse(raw));
+          if (u) return u;
+        }
+      } catch(e){}
+    }
+    // 2. sessionStorage
+    for (const k of SESSION_KEYS){
+      try {
+        const raw = sessionStorage.getItem(k);
+        if (raw){
+          const u = normalizeUser(safeParse(raw));
+          if (u) return u;
+        }
+      } catch(e){}
+    }
+    // 3. Legacy flat keys
+    try {
+      const legacy = {
+        mobile    : localStorage.getItem('mobile')     || sessionStorage.getItem('mobile'),
+        name      : localStorage.getItem('name')       || sessionStorage.getItem('name'),
+        role      : localStorage.getItem('role')       || sessionStorage.getItem('role'),
+        permission: localStorage.getItem('permission') || sessionStorage.getItem('permission')
+      };
+      const u = normalizeUser(legacy);
+      if (u) return u;
+    } catch(e){}
+
+    return null;
+  }
+
+  /* ============================================================
+     USER STRIP (display only)
+     ============================================================ */
+  function renderUserStrip(){
+    const strip = $('userStrip');
+    if (!CURRENT_USER){
+      strip.style.display = 'none';
+      return;
+    }
+    strip.style.display = 'flex';
+    $('uAvatar').textContent = initials(CURRENT_USER.name);
+    $('uName').textContent   = CURRENT_USER.name;
+    $('uMob').textContent    = CURRENT_USER.mobile || '—';
+    $('uLevel').textContent  = CURRENT_USER.role || '—';
+    const p = $('uPerm');
+    p.textContent = CURRENT_USER.permission || '—';
+    p.className = 'u-perm ' + (CURRENT_USER.permission === 'ALLOWED' ? 'ALLOWED' : 'DENIED');
   }
 
   /* ============================================================
@@ -814,17 +966,17 @@
       for (const e of items) {
         const jksId   = e.jksId   || '';
         const jksDate = e.jksDate || '';
+        const jksUser = e.jksUser || '';
 
-        // ---- Age badge ----
         const age = calcAge(e.dob);
         const ageHtml = (age !== null)
           ? `<span class="age-badge"><i class="fas fa-cake-candles"></i> Age <span class="age-num">${age}</span> yrs</span>`
           : `<span class="age-badge na"><i class="fas fa-circle-question"></i> Age —</span>`;
 
-        // ---- JKS chips (only show if present) ----
         let chipsHtml = '';
         if (jksId)   chipsHtml += `<span class="jks-chip"><i class="fas fa-hashtag"></i>${esc(jksId)}</span>`;
         if (jksDate) chipsHtml += `<span class="jks-chip"><i class="fas fa-calendar-check"></i>${esc(jksDate)}</span>`;
+        if (jksUser) chipsHtml += `<span class="jks-chip user-chip"><i class="fas fa-user"></i>${esc(jksUser)}</span>`;
 
         html += `
           <div class="entry-row" data-slno="${esc(e.slNo)}">
@@ -859,6 +1011,10 @@
      MODAL
      ============================================================ */
   function openModal(slNo) {
+    if (!CURRENT_USER) {
+      toast('Please sign in from the home page first.', 'err');
+      return;
+    }
     const idx = ENTRIES.findIndex(e => String(e.slNo) === String(slNo));
     if (idx === -1) { toast('Entry not found', 'err'); return; }
     editingRow   = ENTRIES[idx];
@@ -866,7 +1022,9 @@
 
     $('modalSub').innerHTML =
       'Beneficiary: <strong>' + esc(editingRow.name || '—') + '</strong>' +
-      '<br>Aadhaar: ' + esc(fmtAadhaar(editingRow.aadhaar));
+      '<br>Aadhaar: ' + esc(fmtAadhaar(editingRow.aadhaar)) +
+      '<br><span class="by"><i class="fas fa-user-check"></i> ' +
+      esc(CURRENT_USER.name) + '</span>';
 
     $('inputJksId').value   = editingRow.jksId   || '';
     $('inputJksDate').value = toISO(editingRow.jksDate || '');
@@ -884,16 +1042,22 @@
   async function saveJks() {
     if (!editingRow) return;
 
+    if (!CURRENT_USER) {
+      toast('Please sign in from the home page first.', 'err');
+      closeModal();
+      return;
+    }
+
     const jksId   = $('inputJksId').value.trim();
-    const isoDate = $('inputJksDate').value;           // YYYY-MM-DD
-    const jksDate = fromISO(isoDate);                  // DD/MM/YYYY
+    const isoDate = $('inputJksDate').value;
+    const jksDate = fromISO(isoDate);
 
     if (!jksId && !jksDate) {
       toast('Please fill at least one field', 'err');
       return;
     }
 
-    // ---- TimeStamp: auto (current date & time) ----
+    // Auto TimeStamp
     const now = new Date();
     const dd   = String(now.getDate()).padStart(2,'0');
     const mm   = String(now.getMonth()+1).padStart(2,'0');
@@ -903,15 +1067,16 @@
     const ss   = String(now.getSeconds()).padStart(2,'0');
     const timestamp = `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
 
-    // ---- USER: hidden, captured from device/session ----
-    const user = getLoggedInUser();
+    // USER captured from index page session
+    const user = CURRENT_USER.name;
 
     const payload = {
       slNo     : editingRow.slNo,
       jksId    : jksId,
       jksDate  : jksDate,
       timestamp: timestamp,
-      jksUser  : user
+      jksUser  : user,
+      mobile   : CURRENT_USER.mobile || ''
     };
 
     const saveBtn = $('modalSave');
@@ -925,7 +1090,6 @@
         return;
       }
 
-      // update local entry
       editingRow.jksId   = jksId;
       editingRow.jksDate = jksDate;
       editingRow.jksTime = timestamp;
@@ -934,42 +1098,13 @@
       saveCache();
       applyFilter(false);
 
-      toast('JKS details updated', 'ok');
+      toast('JKS updated by ' + user, 'ok');
       closeModal();
     } catch (e) {
       toast('Network error during save', 'err');
     } finally {
       saveBtn.disabled = false;
       saveBtn.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Save';
-    }
-  }
-
-  /* ============================================================
-     HIDDEN USER RESOLUTION
-     ============================================================ */
-  function getLoggedInUser() {
-    try {
-      if (typeof window.LOGGED_IN_USER === 'string' && window.LOGGED_IN_USER.trim()) {
-        return window.LOGGED_IN_USER.trim();
-      }
-      const stored = localStorage.getItem('pension_user_name');
-      if (stored && stored.trim()) return stored.trim();
-
-      let dev = localStorage.getItem('pension_device_user');
-      if (!dev) {
-        const ua = navigator.userAgent || '';
-        const platform =
-          /Android/i.test(ua) ? 'Android' :
-          /iPhone|iPad|iPod/i.test(ua) ? 'iOS' :
-          /Windows/i.test(ua) ? 'Windows' :
-          /Mac/i.test(ua) ? 'Mac' : 'Device';
-        const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-        dev = 'User-' + platform + '-' + rand;
-        localStorage.setItem('pension_device_user', dev);
-      }
-      return dev;
-    } catch (e) {
-      return 'Unknown';
     }
   }
 
@@ -1023,6 +1158,10 @@
      BOOT
      ============================================================ */
   function boot() {
+    // ---- Read signed-in user from index page session (silent) ----
+    CURRENT_USER = readSessionFromIndex();
+    renderUserStrip();
+
     const cached = loadCache();
 
     if (cached) {
