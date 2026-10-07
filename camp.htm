@@ -183,6 +183,65 @@
     }
     .entry-info .dob-val { color: #CBD5E1; font-weight: 500; }
 
+    /* Age badge (replaces JKS "not updated" chip) */
+    .age-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      color: var(--warn);
+      letter-spacing: 0.3px;
+    }
+    .age-badge i { font-size: 9px; opacity: 0.85; }
+    .age-badge .age-num { font-size: 12px; font-weight: 800; color: #FCD34D; }
+    .age-badge.na {
+      background: transparent;
+      border-style: dashed;
+      border-color: var(--border-subtle);
+      color: #64748B;
+      font-weight: 500;
+    }
+
+    /* JKS chips */
+    .jks-info {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .jks-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      color: var(--accent);
+      letter-spacing: 0.2px;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .jks-chip i { font-size: 9px; opacity: 0.8; }
+
+    .entry-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     .type-tag {
       flex-shrink: 0;
       font-size: 9.5px;
@@ -199,6 +258,22 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.08);
     }
+
+    .btn-edit-row {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary-light);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      display: flex; align-items: center; gap: 5px;
+      transition: background .15s, transform .1s;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .btn-edit-row:active { transform: scale(0.94); background: rgba(59, 130, 246, 0.3); }
+    .btn-edit-row i { font-size: 10px; }
 
     /* ============= FAB SYNC ============= */
     .fab-sync {
@@ -260,6 +335,106 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    /* ============= MODAL (JKS update) ============= */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 400;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      display: none;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.on { display: flex; }
+    .modal-box {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: 22px 20px;
+      width: 100%; max-width: 400px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      animation: modalIn 0.22s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-box .modal-head {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 4px;
+    }
+    .modal-box .modal-head .m-icon {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .modal-box h3 {
+      font-size: 16px; font-weight: 700;
+      color: var(--text-primary);
+    }
+    .modal-box .sub {
+      font-size: 12px; color: var(--text-secondary);
+      margin: 6px 0 18px; line-height: 1.45;
+      padding-left: 44px;
+    }
+    .modal-box .sub strong { color: var(--accent); font-weight: 600; }
+
+    .modal-box .field { margin-bottom: 14px; }
+    .modal-box .field label {
+      display: block; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      color: var(--text-secondary); margin-bottom: 6px;
+    }
+    .modal-box .field input {
+      width: 100%; padding: 12px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary); font-size: 14px; font-weight: 500;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .modal-box .field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .modal-box .field input::placeholder { color: #475569; }
+
+    .modal-box .field input[type="date"] {
+      color-scheme: dark;
+      font-family: inherit;
+    }
+    .modal-box .field input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7) sepia(1) saturate(4) hue-rotate(180deg);
+      cursor: pointer;
+      opacity: 0.8;
+    }
+
+    .modal-actions {
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+    .modal-actions button {
+      flex: 1; padding: 13px; border-radius: var(--radius-sm);
+      font-weight: 700; font-size: 13.5px;
+      transition: background .15s, transform .1s, opacity .15s;
+      letter-spacing: 0.2px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .modal-actions button:active { transform: scale(0.97); }
+    .modal-actions .btn-cancel {
+      background: var(--bg-input); color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+    .modal-actions .btn-save {
+      background: var(--primary); color: #fff;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    }
+    .modal-actions .btn-save:disabled { opacity: 0.6; pointer-events: none; }
+    .modal-actions .btn-save i { font-size: 12px; }
   </style>
 </head>
 <body>
@@ -299,24 +474,53 @@
   </button>
 </div>
 
+<!-- MODAL for JKS update (only 2 fields visible) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="m-icon"><i class="fas fa-pen-to-square"></i></div>
+      <h3>Update JKS Details</h3>
+    </div>
+    <div class="sub" id="modalSub">Beneficiary: —</div>
+
+    <div class="field">
+      <label for="inputJksId"><i class="fas fa-hashtag" style="margin-right:4px;opacity:.6"></i> JKS ID</label>
+      <input type="text" id="inputJksId" placeholder="Enter JKS ID" autocomplete="off" inputmode="text">
+    </div>
+
+    <div class="field">
+      <label for="inputJksDate"><i class="fas fa-calendar-check" style="margin-right:4px;opacity:.6"></i> JKS Date</label>
+      <input type="date" id="inputJksDate">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modalCancel">Cancel</button>
+      <button class="btn-save" id="modalSave"><i class="fas fa-cloud-arrow-up"></i> Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
   /* ============================================================
      CONFIG
      ============================================================ */
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykSfVYgIUv5KUAuYIZ_AMcRsVVWzqW-t1RNtq7LI2pk8QEneFw9oC9y2uhbcdoQgZ1/exec';
-  const CACHE_KEY  = 'pension_list_v1';
-  const CACHE_VER  = 1;
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzRe8ApQSii4Rre6r5nMAGvXQ2P7BmaezxbPXAHH1-T-E0MM1ZEW1RE0pxAxgEoSjG2w/exec';
+  const CACHE_KEY  = 'pension_list_v2';
+  const CACHE_VER  = 2;
 
   /* ============================================================
      STATE
      ============================================================ */
-  let ENTRIES        = [];      // full dataset
-  let FILTERED       = [];      // after search filter
+  let ENTRIES        = [];
+  let FILTERED       = [];
   let SYNCING        = false;
   let LAST_SYNCED_AT = 0;
   let statusTimer    = null;
+
+  let editingRow    = null;
+  let editingIndex  = -1;
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => (
@@ -346,7 +550,6 @@
     return d + ' day' + (d > 1 ? 's' : '') + ' ago';
   }
 
-  // Deterministic color from string (for TYPE tags)
   function typeColor(t) {
     const key = String(t || '').toLowerCase();
     if (/old|বৃদ্ধ|বার্ধক্য/.test(key))       return 'linear-gradient(135deg,#8B5CF6,#6D28D9)';
@@ -357,6 +560,64 @@
     if (/student|ছাত্র/.test(key))            return 'linear-gradient(135deg,#06B6D4,#0E7490)';
     if (/artisan|কারিগর/.test(key))           return 'linear-gradient(135deg,#F43F5E,#9F1239)';
     return 'linear-gradient(135deg,#3B82F6,#1D4ED8)';
+  }
+
+  // ---- Compute age in years from DOB string (DD/MM/YYYY) ----
+  function calcAge(dobStr) {
+    if (!dobStr) return null;
+    const s = String(dobStr).trim();
+
+    // Try DD/MM/YYYY or DD-MM-YYYY
+    let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    let dob = null;
+    if (m) {
+      const dd = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10) - 1;
+      const yyyy = parseInt(m[3], 10);
+      dob = new Date(yyyy, mm, dd);
+    } else {
+      // Try YYYY-MM-DD
+      m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+      if (m) {
+        const yyyy = parseInt(m[1], 10);
+        const mm = parseInt(m[2], 10) - 1;
+        const dd = parseInt(m[3], 10);
+        dob = new Date(yyyy, mm, dd);
+      }
+    }
+
+    if (!dob || isNaN(dob.getTime())) return null;
+
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const mDiff = today.getMonth() - dob.getMonth();
+    if (mDiff < 0 || (mDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    if (age < 0 || age > 150) return null; // sanity check
+    return age;
+  }
+
+  // Convert DD/MM/YYYY → YYYY-MM-DD for <input type="date">
+  function toISO(ddmmyyyy) {
+    if (!ddmmyyyy) return '';
+    const m = String(ddmmyyyy).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (!m) return '';
+    const dd = String(m[1]).padStart(2, '0');
+    const mm = String(m[2]).padStart(2, '0');
+    const yyyy = m[3];
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Convert YYYY-MM-DD → DD/MM/YYYY
+  function fromISO(iso) {
+    if (!iso) return '';
+    const m = String(iso).match(/^(\d{4})\-(\d{1,2})\-(\d{1,2})/);
+    if (!m) return iso;
+    const yyyy = m[1];
+    const mm = String(m[2]).padStart(2, '0');
+    const dd = String(m[3]).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy}`;
   }
 
   /* ============================================================
@@ -404,7 +665,7 @@
   }
 
   /* ============================================================
-     LOCAL CACHE (persistent in browser)
+     LOCAL CACHE
      ============================================================ */
   function loadCache() {
     try {
@@ -453,7 +714,7 @@
   }
 
   /* ============================================================
-     SYNC — full bulk download
+     SYNC
      ============================================================ */
   async function syncNow({ silent = false } = {}) {
     if (SYNCING) return false;
@@ -507,6 +768,7 @@
         if (String(e.type).toLowerCase().includes(q))  return true;
         if (String(e.block).toLowerCase().includes(q)) return true;
         if (String(e.gp).toLowerCase().includes(q))    return true;
+        if (e.jksId && String(e.jksId).toLowerCase().includes(q)) return true;
         if (qDigits && String(e.aadhaar).replace(/\D/g, '').includes(qDigits)) return true;
         return false;
       });
@@ -515,7 +777,7 @@
   }
 
   /* ============================================================
-     RENDER — every row, grouped by TYPE
+     RENDER
      ============================================================ */
   function renderEntries() {
     const list      = $('entriesList');
@@ -530,7 +792,6 @@
       return;
     }
 
-    // Group by TYPE
     const groups = {};
     FILTERED.forEach(e => {
       const k = (e.type || 'OTHER').toUpperCase();
@@ -538,12 +799,10 @@
     });
     const types = Object.keys(groups).sort();
 
-    // Sort entries inside each group by name
     types.forEach(t => {
       groups[t].sort((a, b) => String(a.name).localeCompare(String(b.name)));
     });
 
-    // Build HTML — every row, no pagination
     let html = '';
     for (const t of types) {
       const items = groups[t];
@@ -553,6 +812,20 @@
       </div>`;
 
       for (const e of items) {
+        const jksId   = e.jksId   || '';
+        const jksDate = e.jksDate || '';
+
+        // ---- Age badge ----
+        const age = calcAge(e.dob);
+        const ageHtml = (age !== null)
+          ? `<span class="age-badge"><i class="fas fa-cake-candles"></i> Age <span class="age-num">${age}</span> yrs</span>`
+          : `<span class="age-badge na"><i class="fas fa-circle-question"></i> Age —</span>`;
+
+        // ---- JKS chips (only show if present) ----
+        let chipsHtml = '';
+        if (jksId)   chipsHtml += `<span class="jks-chip"><i class="fas fa-hashtag"></i>${esc(jksId)}</span>`;
+        if (jksDate) chipsHtml += `<span class="jks-chip"><i class="fas fa-calendar-check"></i>${esc(jksDate)}</span>`;
+
         html += `
           <div class="entry-row" data-slno="${esc(e.slNo)}">
             <div class="entry-info">
@@ -564,13 +837,140 @@
                 <i class="fas fa-cake-candles"></i>
                 <span class="dob-val">${esc(e.dob || '—')}</span>
               </div>
+              <div class="jks-info">
+                ${ageHtml}
+                ${chipsHtml}
+              </div>
             </div>
-            <div class="type-tag" style="background:${typeColor(t)}">${esc(t)}</div>
+            <div class="entry-right">
+              <div class="type-tag" style="background:${typeColor(t)}">${esc(t)}</div>
+              <button class="btn-edit-row" data-slno="${esc(e.slNo)}">
+                <i class="fas fa-pen"></i> Edit
+              </button>
+            </div>
           </div>`;
       }
     }
 
     list.innerHTML = html;
+  }
+
+  /* ============================================================
+     MODAL
+     ============================================================ */
+  function openModal(slNo) {
+    const idx = ENTRIES.findIndex(e => String(e.slNo) === String(slNo));
+    if (idx === -1) { toast('Entry not found', 'err'); return; }
+    editingRow   = ENTRIES[idx];
+    editingIndex = idx;
+
+    $('modalSub').innerHTML =
+      'Beneficiary: <strong>' + esc(editingRow.name || '—') + '</strong>' +
+      '<br>Aadhaar: ' + esc(fmtAadhaar(editingRow.aadhaar));
+
+    $('inputJksId').value   = editingRow.jksId   || '';
+    $('inputJksDate').value = toISO(editingRow.jksDate || '');
+
+    $('modalOverlay').classList.add('on');
+    setTimeout(() => $('inputJksId').focus(), 120);
+  }
+
+  function closeModal() {
+    $('modalOverlay').classList.remove('on');
+    editingRow = null;
+    editingIndex = -1;
+  }
+
+  async function saveJks() {
+    if (!editingRow) return;
+
+    const jksId   = $('inputJksId').value.trim();
+    const isoDate = $('inputJksDate').value;           // YYYY-MM-DD
+    const jksDate = fromISO(isoDate);                  // DD/MM/YYYY
+
+    if (!jksId && !jksDate) {
+      toast('Please fill at least one field', 'err');
+      return;
+    }
+
+    // ---- TimeStamp: auto (current date & time) ----
+    const now = new Date();
+    const dd   = String(now.getDate()).padStart(2,'0');
+    const mm   = String(now.getMonth()+1).padStart(2,'0');
+    const yyyy = now.getFullYear();
+    const hh   = String(now.getHours()).padStart(2,'0');
+    const mi   = String(now.getMinutes()).padStart(2,'0');
+    const ss   = String(now.getSeconds()).padStart(2,'0');
+    const timestamp = `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+    // ---- USER: hidden, captured from device/session ----
+    const user = getLoggedInUser();
+
+    const payload = {
+      slNo     : editingRow.slNo,
+      jksId    : jksId,
+      jksDate  : jksDate,
+      timestamp: timestamp,
+      jksUser  : user
+    };
+
+    const saveBtn = $('modalSave');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    try {
+      const r = await apiCall('updateJks', payload);
+      if (!r || !r.success) {
+        toast('Update failed: ' + ((r && r.message) || 'unknown'), 'err');
+        return;
+      }
+
+      // update local entry
+      editingRow.jksId   = jksId;
+      editingRow.jksDate = jksDate;
+      editingRow.jksTime = timestamp;
+      editingRow.jksUser = user;
+
+      saveCache();
+      applyFilter(false);
+
+      toast('JKS details updated', 'ok');
+      closeModal();
+    } catch (e) {
+      toast('Network error during save', 'err');
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> Save';
+    }
+  }
+
+  /* ============================================================
+     HIDDEN USER RESOLUTION
+     ============================================================ */
+  function getLoggedInUser() {
+    try {
+      if (typeof window.LOGGED_IN_USER === 'string' && window.LOGGED_IN_USER.trim()) {
+        return window.LOGGED_IN_USER.trim();
+      }
+      const stored = localStorage.getItem('pension_user_name');
+      if (stored && stored.trim()) return stored.trim();
+
+      let dev = localStorage.getItem('pension_device_user');
+      if (!dev) {
+        const ua = navigator.userAgent || '';
+        const platform =
+          /Android/i.test(ua) ? 'Android' :
+          /iPhone|iPad|iPod/i.test(ua) ? 'iOS' :
+          /Windows/i.test(ua) ? 'Windows' :
+          /Mac/i.test(ua) ? 'Mac' : 'Device';
+        const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+        dev = 'User-' + platform + '-' + rand;
+        localStorage.setItem('pension_device_user', dev);
+      }
+      return dev;
+    } catch (e) {
+      return 'Unknown';
+    }
   }
 
   /* ============================================================
@@ -590,7 +990,7 @@
   }
 
   /* ============================================================
-     SEARCH INPUT WIRING
+     EVENTS
      ============================================================ */
   let searchDebounce = null;
   $('searchInput').addEventListener('input', () => {
@@ -604,14 +1004,28 @@
     applyFilter(false);
   });
 
+  $('entriesList').addEventListener('click', e => {
+    const btn = e.target.closest('.btn-edit-row');
+    if (!btn) return;
+    openModal(btn.dataset.slno);
+  });
+
+  $('modalCancel').addEventListener('click', closeModal);
+  $('modalSave').addEventListener('click', saveJks);
+  $('modalOverlay').addEventListener('click', e => {
+    if (e.target === $('modalOverlay')) closeModal();
+  });
+  $('inputJksId').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); saveJks(); }
+  });
+
   /* ============================================================
-     BOOT — cache-first, no automatic server hit on reload
+     BOOT
      ============================================================ */
   function boot() {
     const cached = loadCache();
 
     if (cached) {
-      // Use cached data immediately — NO server call
       ENTRIES = cached.entries;
       $('loadingState').style.display = 'none';
       applyFilter(true);
@@ -619,7 +1033,6 @@
       updateSyncStatus('idle');
       console.log('[Pension] Loaded ' + ENTRIES.length + ' records from cache.');
     } else {
-      // First visit (or cache cleared) — fetch once
       updateSyncStatus('syncing');
       syncNow({ silent: false }).then(ok => {
         $('loadingState').style.display = 'none';
@@ -632,13 +1045,11 @@
 
     startStatusTicker();
 
-    // Manual sync
     $('btnSync').addEventListener('click', () => {
       toast('Refreshing…');
       syncNow({ silent: false });
     });
 
-    // Pull-to-refresh
     let touchStartY = 0;
     const main = $('main');
     main.addEventListener('touchstart', e => {
